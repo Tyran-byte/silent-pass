@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure git identity (needed for git init in fixtures)
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run POSIX test suite
+        if: runner.os != 'Windows'
+        run: bash tests/run.sh
+
+      - name: Run POSIX test suite (Git Bash)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: bash tests/run.sh
+
+      - name: Run PowerShell test suite
+        shell: pwsh
+        run: ./tests/run.ps1
