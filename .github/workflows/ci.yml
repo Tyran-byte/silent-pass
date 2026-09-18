@@ -1,9 +1,9 @@
 name: CI
 
+# Push to main only: this job runs on a self-hosted runner, so code from outside pull requests
+# must never reach it. Pull requests are disabled on the repo as well.
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
 
 jobs:
@@ -21,9 +21,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Configure git identity (needed for git init in fixtures)
+        # Env vars instead of `git config --global`: on a self-hosted runner --global rewrites
+        # the machine owner's ~/.gitconfig.
         run: |
-          git config --global user.email "ci@example.com"
-          git config --global user.name "CI"
+          {
+            echo "GIT_AUTHOR_NAME=CI"; echo "GIT_AUTHOR_EMAIL=ci@example.com"
+            echo "GIT_COMMITTER_NAME=CI"; echo "GIT_COMMITTER_EMAIL=ci@example.com"
+          } >> "$GITHUB_ENV"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
